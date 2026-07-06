@@ -1,18 +1,20 @@
 (define (problem problem-1) (:domain artifacts-2-1)
 (:objects 
-    a1 a2 a3 b1 b2 - artifact
+    a1 a2 a3 b1 b2 c1 c2 - artifact
     h_alpha h_beta h_cryo h_stasis - hall
     p1 p2 - pod
     r - robot
 )
 
 (:init
-;
+;artifact origins inits
 (artifactorigin a1 h_alpha)
 (artifactorigin a2 h_alpha)
 (artifactorigin a3 h_alpha)
 (artifactorigin b1 h_beta)
 (artifactorigin b2 h_beta)
+(artifactorigin c1 h_cryo)
+(artifactorigin c2 h_cryo)
 
 ;hall types
 (iscryochamber h_cryo)
@@ -39,6 +41,8 @@
     (indestination a3)
     (indestination b1)
     (indestination b2)
+    (indestination c1)
+    (indestination c2)
     (at r h_cryo)
     (unsealed r)
     (coolingoff r)
