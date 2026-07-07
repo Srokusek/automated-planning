@@ -6,17 +6,17 @@
 
 (:types
 robot artifact hall pod slot
-standard-robot heavy-transporter loading-drone - robot ;additional subtypes of a robot
+land-robot - robot
+standard-robot heavy-transporter - land-robot
+loading-drone - robot ;additional subtypes of a robot
 )
 
 (:predicates
 (at ?r - robot ?h - hall)
 
 ;keeping track of hall occupancy
-(heavy-in ?h - hall)
-(standard-in ?h - hall)
-(standard-in-tunnel)
-(heavy-in-tunnel)
+(occupied ?h - hall)
+(tunneloccupied)
 
 (artifactorigin ?a - artifact ?h - hall)
 (artifactinpod ?a - artifact ?p - pod)
@@ -136,33 +136,18 @@ standard-robot heavy-transporter loading-drone - robot ;additional subtypes of a
 )
 
 ;exitting a hall into the maintanance tunnel requires the robot to be sealed
-(:action exit-hall-standard
-    :parameters (?r - standard-robot ?h - hall)
+(:action exit-hall
+    :parameters (?r - land-robot ?h - hall)
     :precondition (and 
         (sealed ?r)
         (at ?r ?h)
-        (not (heavy-in-tunnel))
+        (not (tunneloccupied))
     )
     :effect (and 
         (not (at ?r ?h))
-        (not (standard-in ?h))
+        (not (occupied ?h))
         (intunnel ?r)
-        (standard-in-tunnel)
-    )
-)
-
-(:action exit-hall-heavy
-    :parameters (?t - heavy-transporter ?h - hall)
-    :precondition (and 
-        (sealed ?t)
-        (at ?t ?h)
-        (not (standard-in-tunnel))
-    )
-    :effect (and 
-        (not (at ?t ?h))
-        (not (heavy-in ?h))
-        (intunnel ?t)
-        (heavy-in-tunnel)
+        (tunneloccupied)
     )
 )
 
@@ -179,31 +164,17 @@ standard-robot heavy-transporter loading-drone - robot ;additional subtypes of a
 )
 
 ;enter a hall from the maintanance tunnel
-(:action enter-hall-standard
-    :parameters (?r - standard-robot ?h - hall)
+(:action enter-hall
+    :parameters (?r - land-robot ?h - hall)
     :precondition (and 
         (intunnel ?r)
-        (not (heavy-in ?h))
+        (not (occupied ?h))
     )
     :effect (and 
         (at ?r ?h)
-        (standard-in ?h)
+        (occupied ?h)
         (not (intunnel ?r))
-        (not (standard-in-tunnel))
-    )
-)
-
-(:action enter-hall-heavy
-    :parameters (?t - heavy-transporter ?h - hall)
-    :precondition (and 
-        (intunnel ?t)
-        (not (standard-in ?h))
-    )
-    :effect (and 
-        (at ?t ?h)
-        (heavy-in ?h)
-        (not (intunnel ?t))
-        (not (heavy-in-tunnel))
+        (not (tunneloccupied))
     )
 )
 
