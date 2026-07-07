@@ -1,0 +1,907 @@
+;Header and description
+
+(define (domain artifacts-2-3)
+
+(:requirements :strips :typing :negative-preconditions :hierarchy)
+
+(:types
+robot artifact hall pod slot - object
+standard-robot heavy-transporter loading-drone - robot ;additional subtypes of a robot
+)
+
+(:predicates
+(at ?r - robot ?h - hall)
+
+;keeping track of hall occupancy
+(heavy-in ?h - hall)
+(standard-in ?h - hall)
+(standard-in-tunnel)
+(heavy-in-tunnel)
+
+(artifactorigin ?a - artifact ?h - hall)
+(artifactinpod ?a - artifact ?p - pod)
+(podstored ?p - pod)
+(haspod ?r - robot ?p - pod)
+(podempty ?p - pod)
+(carrying ?r - robot ?a - artifact)
+
+(indestination ?a - artifact)
+
+;new heavy artifact type
+(isheavy ?a - artifact)
+
+(iscryochamber ?h - hall)
+(isstasislab ?h - hall)
+(isalpha ?h - hall)
+(isbeta ?h - hall)
+
+(intunnel ?r - robot)
+(coolingon ?r - robot)
+(coolingoff ?r - robot)
+(sealed ?r - robot)
+(unsealed ?r - robot)
+(empty ?r - robot)
+
+;two-state battery for loading drones
+(batteryfull ?d - loading-drone)
+(batteryempty ?d - loading-drone)
+
+;heavy transporter slots
+(slotof ?s - slot ?t - heavy-transporter)
+(slotpair ?t - heavy-transporter ?s1 - slot ?s2 - slot)
+(slotempty ?s - slot)
+(artifactinslot ?a - artifact ?s - slot)
+(podinslot ?p - pod ?s - slot)
+)
+
+;robot enters the sealed mode
+(:action seal
+    :parameters (?r - robot)
+    :precondition (and 
+        (unsealed ?r)
+    )
+    :effect (and 
+        (not (unsealed ?r))
+        (sealed ?r)
+    )
+)
+
+;robot exits the sealed mode
+(:action unseal
+    :parameters (?r - robot ?h - hall)
+    :precondition (and 
+        (sealed ?r)
+        (at ?r ?h)
+    )
+    :effect (and
+        (not (sealed ?r))
+        (unsealed ?r)
+    )
+)
+
+(:action cool
+    :parameters (?r - robot)
+    :precondition (and 
+        (coolingoff ?r)
+    )
+    :effect (and 
+        (not (coolingoff ?r))
+        (coolingon ?r)
+    )
+)
+
+(:action cool-off
+    :parameters (?r - robot)
+    :precondition (and 
+        (coolingon ?r)
+    )
+    :effect (and 
+        (not (coolingon ?r))
+        (coolingoff ?r)
+    )
+)
+
+;actions for standard robot
+
+;take a pod from the storing location
+(:action take-pod
+    :parameters (?r - standard-robot ?p - pod)
+    :precondition (and 
+        (podstored ?p)
+        (empty ?r)
+        (intunnel ?r)
+    )
+    :effect (and 
+        (not (podstored ?p))
+        (not (empty ?r))
+        (haspod ?r ?p)
+    )
+)
+
+;return a pod to the storing location
+(:action return-pod
+    :parameters (?r - standard-robot ?p - pod)
+    :precondition (and 
+        (haspod ?r ?p)
+        (sealed ?r)
+        (empty ?r)
+        (podempty ?p)
+        (intunnel ?r)
+    )
+    :effect (and 
+        (podstored ?p)
+        (not (haspod ?r ?p))
+    )
+)
+
+;exitting a hall into the maintanance tunnel requires the robot to be sealed
+(:action exit-hall-standard
+    :parameters (?r - standard-robot ?h - hall)
+    :precondition (and 
+        (sealed ?r)
+        (at ?r ?h)
+        (not (heavy-in-tunnel))
+    )
+    :effect (and 
+        (not (at ?r ?h))
+        (not (standard-in ?h))
+        (intunnel ?r)
+        (standard-in-tunnel)
+    )
+)
+
+(:action exit-hall-heavy
+    :parameters (?t - heavy-transporter ?h - hall)
+    :precondition (and 
+        (sealed ?t)
+        (at ?t ?h)
+        (not (standard-in-tunnel))
+    )
+    :effect (and 
+        (not (at ?t ?h))
+        (not (heavy-in ?h))
+        (intunnel ?t)
+        (heavy-in-tunnel)
+    )
+)
+
+(:action exit-hall-drone
+    :parameters (?d - loading-drone ?h - hall)
+    :precondition (and 
+        (sealed ?d)
+        (at ?d ?h)
+    )
+    :effect (and 
+        (not (at ?d ?h))
+        (intunnel ?d)
+    )
+)
+
+;enter a hall from the maintanance tunnel
+(:action enter-hall-standard
+    :parameters (?r - standard-robot ?h - hall)
+    :precondition (and 
+        (intunnel ?r)
+        (not (heavy-in ?h))
+    )
+    :effect (and 
+        (at ?r ?h)
+        (standard-in ?h)
+        (not (intunnel ?r))
+        (not (standard-in-tunnel))
+    )
+)
+
+(:action enter-hall-heavy
+    :parameters (?t - heavy-transporter ?h - hall)
+    :precondition (and 
+        (intunnel ?t)
+        (not (standard-in ?h))
+    )
+    :effect (and 
+        (at ?t ?h)
+        (heavy-in ?h)
+        (not (intunnel ?t))
+        (not (heavy-in-tunnel))
+    )
+)
+
+(:action enter-hall-drone
+    :parameters (?d - loading-drone ?h - hall)
+    :precondition (and 
+        (intunnel ?d)
+    )
+    :effect (and 
+        (at ?d ?h)
+        (not (intunnel ?d))
+    )
+)
+
+;take an artifact from beta
+;requires the vibration pod, also requires the robot to be unsealed
+(:action take-artifact-beta
+    :parameters (?r - standard-robot ?a - artifact ?h - hall ?p - pod)
+    :precondition (and 
+        (at ?r ?h)
+        (artifactorigin ?a ?h)
+        (isbeta ?h)
+        (haspod ?r ?p)
+        (podempty ?p)
+        (unsealed ?r)
+        (coolingoff ?r)
+    )
+    :effect (and 
+        (not (podempty ?p))
+        (not (empty ?r))
+        (carrying ?r ?a)
+        (artifactinpod ?a ?p)
+    )
+)
+
+;take and artifact from the alpha hall
+;cooling has to beturned on to pick up the artifact
+(:action take-artifact-alpha
+    :parameters (?r - standard-robot ?a - artifact ?h - hall)
+    :precondition (and 
+        (at ?r ?h)
+        (isalpha ?h)
+        (artifactorigin ?a ?h)
+        (empty ?r)
+        (unsealed ?r)
+        (coolingon ?r)
+
+    )
+    :effect (and 
+        (carrying ?r ?a)
+        (not (empty ?r))
+    )
+)
+
+;deposit an alpha artifact
+(:action deposit-artifact-alpha
+    :parameters (?r - standard-robot ?a - artifact ?h1 - hall ?h2 - hall)
+    :precondition (and 
+        (isalpha ?h1)
+        (artifactorigin ?a ?h1)
+        (at ?r ?h2)
+        (carrying ?r ?a)
+        (iscryochamber ?h2)
+        (unsealed ?r)
+    )
+    :effect (and 
+        (not (carrying ?r ?a))
+        (indestination ?a)
+        (empty ?r)
+    )
+)
+
+;deposit a beta artifact
+(:action deposit-artifact-beta
+    :parameters (?r - standard-robot ?a - artifact ?h1 - hall ?h2 - hall ?p - pod)
+    :precondition (and 
+        (isbeta ?h1)
+        (artifactorigin ?a ?h1)
+        (at ?r ?h2)
+        (carrying ?r ?a)
+        (iscryochamber ?h2)
+        (unsealed ?r)
+        (haspod ?r ?p)
+    )
+    :effect (and 
+        (not (carrying ?r ?a))
+        (indestination ?a)
+        (empty ?r)
+        (not (artifactinpod ?a ?p))
+        (podempty ?p)
+    )
+)
+
+;actions for heavy transporter + drone
+(:action heavy-take-pod
+    :parameters (?t - heavy-transporter ?p - pod ?s - slot)
+    :precondition (and 
+        (podstored ?p)
+        (intunnel ?t)
+        (slotof ?s ?t)
+        (slotempty ?s)
+    )
+    :effect (and 
+        (not (podstored ?p))
+        (not (slotempty ?s))
+        (podinslot ?p ?s)
+        (haspod ?t ?p)
+    )
+)
+
+(:action heavy-return-pod
+    :parameters (?t - heavy-transporter ?p - pod ?s - slot)
+    :precondition (and 
+        (haspod ?t ?p)
+        (sealed ?t)
+        (podempty ?p)
+        (intunnel ?t)
+        (slotof ?s ?t)
+        (podinslot ?p ?s)
+    )
+    :effect (and 
+        (podstored ?p)
+        (not (haspod ?t ?p))
+        (not (podinslot ?p ?s))
+        (slotempty ?s)
+    )
+)
+
+(:action drone-load-artifact-alpha
+    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h - hall ?s - slot)
+    :precondition (and 
+        (at ?t ?h)
+        (at ?d ?h)
+        (artifactorigin ?a ?h)
+        (isalpha ?h)
+        (unsealed ?t)
+        (coolingon ?t)
+        (not (isheavy ?a))
+        (batteryfull ?d)
+        (slotof ?s ?t)
+        (slotempty ?s)
+    )
+    :effect (and 
+        (not (slotempty ?s))
+        (artifactinslot ?a ?s)
+        (carrying ?t ?a)
+        (not (batteryfull ?d))
+        (batteryempty ?d)
+    )
+)
+
+(:action drone-deposit-artifact-alpha
+    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?s - slot)
+    :precondition (and 
+        (isalpha ?h1)
+        (artifactorigin ?a ?h1)
+        (at ?t ?h2)
+        (at ?d ?h2)
+        (carrying ?t ?a)
+        (artifactinslot ?a ?s)
+        (slotof ?s ?t)
+        (iscryochamber ?h2)
+        (unsealed ?t)
+        (batteryfull ?d)
+    )
+    :effect (and 
+        (not (carrying ?t ?a))
+        (indestination ?a)
+        (not (artifactinslot ?a ?s))
+        (slotempty ?s)
+        (not (batteryfull ?d))
+        (batteryempty ?d)
+    )
+)
+
+(:action drone-load-artifact-beta
+    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h - hall ?p - pod ?s - slot)
+    :precondition (and 
+        (at ?t ?h)
+        (at ?d ?h)
+        (artifactorigin ?a ?h)
+        (isbeta ?h)
+        (haspod ?t ?p)
+        (podempty ?p)
+        (podinslot ?p ?s)
+        (slotof ?s ?t)
+        (unsealed ?t)
+        (coolingoff ?t)
+        (not (isheavy ?a))
+        (batteryfull ?d)
+    )
+    :effect (and 
+        (not (podempty ?p))
+        (carrying ?t ?a)
+        (artifactinpod ?a ?p)
+        (artifactinslot ?a ?s)
+        (not (batteryfull ?d))
+        (batteryempty ?d)
+    )
+)
+
+(:action drone-deposit-artifact-beta
+    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?p - pod ?s - slot)
+    :precondition (and 
+        (isbeta ?h1)
+        (artifactorigin ?a ?h1)
+        (at ?t ?h2)
+        (at ?d ?h2)
+        (carrying ?t ?a)
+        (artifactinpod ?a ?p)
+        (artifactinslot ?a ?s)
+        (podinslot ?p ?s)
+        (slotof ?s ?t)
+        (iscryochamber ?h2)
+        (unsealed ?t)
+        (haspod ?t ?p)
+        (batteryfull ?d)
+    )
+    :effect (and 
+        (not (carrying ?t ?a))
+        (indestination ?a)
+        (not (artifactinpod ?a ?p))
+        (not (artifactinslot ?a ?s))
+        (podempty ?p)
+        (not (batteryfull ?d))
+        (batteryempty ?d)
+    )
+)
+
+(:action drone-load-core-sample
+    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
+    :precondition (and 
+        (at ?t ?h)
+        (at ?d ?h)
+        (artifactorigin ?a ?h)
+        (iscryochamber ?h)
+        (unsealed ?t)
+        (coolingon ?t)
+        (isheavy ?a)
+        (batteryfull ?d)
+        (slotpair ?t ?s1 ?s2)
+        (slotof ?s1 ?t)
+        (slotof ?s2 ?t)
+        (slotempty ?s1)
+        (slotempty ?s2)
+    )
+    :effect (and 
+        (not (slotempty ?s1))
+        (not (slotempty ?s2))
+        (artifactinslot ?a ?s1)
+        (artifactinslot ?a ?s2)
+        (carrying ?t ?a)
+        (not (batteryfull ?d))
+        (batteryempty ?d)
+    )
+)
+
+(:action drone-deposit-core-sample
+    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?s1 - slot ?s2 - slot)
+    :precondition (and 
+        (at ?t ?h2)
+        (at ?d ?h2)
+        (artifactorigin ?a ?h1)
+        (iscryochamber ?h1)
+        (isstasislab ?h2)
+        (unsealed ?t)
+        (coolingon ?t)
+        (isheavy ?a)
+        (batteryfull ?d)
+        (slotpair ?t ?s1 ?s2)
+        (slotof ?s1 ?t)
+        (slotof ?s2 ?t)
+        (artifactinslot ?a ?s1)
+        (artifactinslot ?a ?s2)
+        (carrying ?t ?a)
+    )
+    :effect (and 
+        (not (carrying ?t ?a))
+        (not (artifactinslot ?a ?s1))
+        (not (artifactinslot ?a ?s2))
+        (slotempty ?s1)
+        (slotempty ?s2)
+        (indestination ?a)
+        (not (batteryfull ?d))
+        (batteryempty ?d)
+    )
+)
+
+
+
+(:action charge-drone
+    :parameters (?d - loading-drone)
+    :precondition (and 
+        (intunnel ?d)
+        (batteryempty ?d)
+    )
+    :effect (and 
+        (not (batteryempty ?d))
+        (batteryfull ?d)
+    )
+)
+
+(:task ensure-drone-charged
+    :parameters (?d - loading-drone))
+
+;do nothing if the drone is already charged
+(:method drone-already-charged
+    :parameters (?d - loading-drone)
+    :task (ensure-drone-charged ?d)
+    :precondition (batteryfull ?d)
+    :ordered-subtasks () ;noop
+)
+
+(:method drone-not-charged
+    :parameters (?d - loading-drone)
+    :task (ensure-drone-charged ?d)
+    :precondition (and (intunnel ?d) (batteryempty ?d))
+    :ordered-subtasks (and (charge-drone ?d))
+)
+
+(:task ensure-sealed
+    :parameters (?r - robot))
+
+(:method already-sealed
+    :parameters (?r - robot)
+    :task (ensure-sealed ?r)
+    :precondition (sealed ?r)
+    :ordered-subtasks ()
+)
+
+(:method seal-if-needed
+    :parameters (?r - robot)
+    :task (ensure-sealed ?r)
+    :precondition (unsealed ?r)
+    :ordered-subtasks (and (seal ?r))
+)
+
+(:task ensure-unsealed
+    :parameters (?r - robot ?h - hall))
+
+(:method already-unsealed
+    :parameters (?r - robot ?h - hall)
+    :task (ensure-unsealed ?r ?h)
+    :precondition (and (at ?r ?h) (unsealed ?r))
+    :ordered-subtasks ()
+)
+
+(:method unseal-if-needed
+    :parameters (?r - robot ?h - hall)
+    :task (ensure-unsealed ?r ?h)
+    :precondition (and (at ?r ?h) (sealed ?r))
+    :ordered-subtasks (and (unseal ?r ?h))
+)
+
+(:task ensure-cooling-on
+    :parameters (?r - robot))
+
+(:method cooling-already-on
+    :parameters (?r - robot)
+    :task (ensure-cooling-on ?r)
+    :precondition (coolingon ?r)
+    :ordered-subtasks ()
+)
+
+(:method cool-if-needed
+    :parameters (?r - robot)
+    :task (ensure-cooling-on ?r)
+    :precondition (coolingoff ?r)
+    :ordered-subtasks (and (cool ?r))
+)
+
+(:task ensure-cooling-off
+    :parameters (?r - robot))
+
+(:method cooling-already-off
+    :parameters (?r - robot)
+    :task (ensure-cooling-off ?r)
+    :precondition (coolingoff ?r)
+    :ordered-subtasks ()
+)
+
+(:method cool-off-if-needed
+    :parameters (?r - robot)
+    :task (ensure-cooling-off ?r)
+    :precondition (coolingon ?r)
+    :ordered-subtasks (and (cool-off ?r))
+)
+
+(:task move-standard-robot
+    :parameters (?r - standard-robot ?from - hall ?to - hall))
+
+(:method move-standard-robot-through-tunnel
+    :parameters (?r - standard-robot ?from - hall ?to - hall)
+    :task (move-standard-robot ?r ?from ?to)
+    :precondition (at ?r ?from)
+    :ordered-subtasks (and
+        (ensure-sealed ?r)
+        (exit-hall-standard ?r ?from)
+        (enter-hall-standard ?r ?to)
+    )
+)
+
+(:task move-heavy-transporter
+    :parameters (?t - heavy-transporter ?from - hall ?to - hall))
+
+(:method move-heavy-transporter-through-tunnel
+    :parameters (?t - heavy-transporter ?from - hall ?to - hall)
+    :task (move-heavy-transporter ?t ?from ?to)
+    :precondition (at ?t ?from)
+    :ordered-subtasks (and
+        (ensure-sealed ?t)
+        (exit-hall-heavy ?t ?from)
+        (enter-hall-heavy ?t ?to)
+    )
+)
+
+(:task move-loading-drone
+    :parameters (?d - loading-drone ?from - hall ?to - hall))
+
+(:method move-loading-drone-through-tunnel
+    :parameters (?d - loading-drone ?from - hall ?to - hall)
+    :task (move-loading-drone ?d ?from ?to)
+    :precondition (at ?d ?from)
+    :ordered-subtasks (and
+        (ensure-sealed ?d)
+        (exit-hall-drone ?d ?from)
+        (ensure-drone-charged ?d)
+        (enter-hall-drone ?d ?to)
+    )
+)
+
+(:task move-alpha-artifact-standard
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?r - standard-robot))
+
+(:method move-alpha-artifact-via-standard-robot
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?r - standard-robot ?start - hall)
+    :task (move-alpha-artifact-standard ?a ?origin ?destination ?r)
+    :precondition (and 
+        (at ?r ?start)
+        (artifactorigin ?a ?origin)
+        (isalpha ?origin)
+        (iscryochamber ?destination)
+        (not (isheavy ?a))
+        (empty ?r)
+    )
+    :ordered-subtasks (and
+        (move-standard-robot ?r ?start ?origin)
+        (ensure-unsealed ?r ?origin)
+        (ensure-cooling-on ?r)
+        (take-artifact-alpha ?r ?a ?origin)
+        (move-standard-robot ?r ?origin ?destination)
+        (ensure-unsealed ?r ?destination)
+        (deposit-artifact-alpha ?r ?a ?origin ?destination)
+    )
+)
+
+(:task move-beta-artifact-standard
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?r - standard-robot ?p - pod))
+
+(:method move-beta-artifact-via-standard-robot
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?r - standard-robot ?p - pod ?start - hall)
+    :task (move-beta-artifact-standard ?a ?origin ?destination ?r ?p)
+    :precondition (and 
+        (at ?r ?start)
+        (artifactorigin ?a ?origin)
+        (isbeta ?origin)
+        (iscryochamber ?destination)
+        (not (isheavy ?a))
+        (podstored ?p)
+        (podempty ?p)
+        (empty ?r)
+    )
+    :ordered-subtasks (and
+        (ensure-sealed ?r)
+        (exit-hall-standard ?r ?start)
+        (take-pod ?r ?p)
+        (enter-hall-standard ?r ?origin)
+        (ensure-unsealed ?r ?origin)
+        (ensure-cooling-off ?r)
+        (take-artifact-beta ?r ?a ?origin ?p)
+        (move-standard-robot ?r ?origin ?destination)
+        (ensure-unsealed ?r ?destination)
+        (deposit-artifact-beta ?r ?a ?origin ?destination ?p)
+        (ensure-sealed ?r)
+        (exit-hall-standard ?r ?destination)
+        (return-pod ?r ?p)
+        (enter-hall-standard ?r ?destination)
+    )
+)
+
+(:task move-alpha-artifact-heavy
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?s - slot))
+
+(:method move-alpha-artifact-via-heavy-transporter
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?s - slot ?tstart - hall ?dstart - hall)
+    :task (move-alpha-artifact-heavy ?a ?origin ?destination ?t ?d ?s)
+    :precondition (and 
+        (at ?t ?tstart)
+        (at ?d ?dstart)
+        (artifactorigin ?a ?origin)
+        (isalpha ?origin)
+        (iscryochamber ?destination)
+        (not (isheavy ?a))
+        (slotof ?s ?t)
+        (slotempty ?s)
+    )
+    :ordered-subtasks (and
+        (move-heavy-transporter ?t ?tstart ?origin)
+        (move-loading-drone ?d ?dstart ?origin)
+        (ensure-unsealed ?t ?origin)
+        (ensure-cooling-on ?t)
+        (ensure-drone-charged ?d)
+        (drone-load-artifact-alpha ?t ?d ?a ?origin ?s)
+        (move-heavy-transporter ?t ?origin ?destination)
+        (move-loading-drone ?d ?origin ?destination)
+        (ensure-unsealed ?t ?destination)
+        (ensure-drone-charged ?d)
+        (drone-deposit-artifact-alpha ?t ?d ?a ?origin ?destination ?s)
+    )
+)
+
+(:task move-beta-artifact-heavy
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?p - pod ?s - slot))
+
+(:method move-beta-artifact-via-heavy-transporter
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?p - pod ?s - slot ?tstart - hall ?dstart - hall)
+    :task (move-beta-artifact-heavy ?a ?origin ?destination ?t ?d ?p ?s)
+    :precondition (and 
+        (at ?t ?tstart)
+        (at ?d ?dstart)
+        (artifactorigin ?a ?origin)
+        (isbeta ?origin)
+        (iscryochamber ?destination)
+        (not (isheavy ?a))
+        (podstored ?p)
+        (podempty ?p)
+        (slotof ?s ?t)
+        (slotempty ?s)
+    )
+    :ordered-subtasks (and
+        (ensure-sealed ?t)
+        (exit-hall-heavy ?t ?tstart)
+        (heavy-take-pod ?t ?p ?s)
+        (enter-hall-heavy ?t ?origin)
+        (move-loading-drone ?d ?dstart ?origin)
+        (ensure-unsealed ?t ?origin)
+        (ensure-cooling-off ?t)
+        (ensure-drone-charged ?d)
+        (drone-load-artifact-beta ?t ?d ?a ?origin ?p ?s)
+        (move-heavy-transporter ?t ?origin ?destination)
+        (move-loading-drone ?d ?origin ?destination)
+        (ensure-unsealed ?t ?destination)
+        (ensure-cooling-off ?t)
+        (ensure-drone-charged ?d)
+        (drone-deposit-artifact-beta ?t ?d ?a ?origin ?destination ?p ?s)
+        (ensure-sealed ?t)
+        (exit-hall-heavy ?t ?destination)
+        (heavy-return-pod ?t ?p ?s)
+        (enter-hall-heavy ?t ?destination)
+    )
+)
+
+(:task deliver-martian-core
+    :parameters (?core - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?s1 - slot ?s2 - slot))
+
+(:method deliver-martian-core-via-heavy-transporter
+    :parameters (?core - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?s1 - slot ?s2 - slot ?tstart - hall ?dstart - hall)
+    :task (deliver-martian-core ?core ?origin ?destination ?t ?d ?s1 ?s2)
+    :precondition (and 
+        (at ?t ?tstart)
+        (at ?d ?dstart)
+        (artifactorigin ?core ?origin)
+        (iscryochamber ?origin)
+        (isstasislab ?destination)
+        (isheavy ?core)
+        (slotpair ?t ?s1 ?s2)
+        (slotof ?s1 ?t)
+        (slotof ?s2 ?t)
+    )
+    :ordered-subtasks (and
+        (move-heavy-transporter ?t ?tstart ?origin)
+        (move-loading-drone ?d ?dstart ?origin)
+        (ensure-unsealed ?t ?origin)
+        (ensure-cooling-on ?t)
+        (ensure-drone-charged ?d)
+        (drone-load-core-sample ?t ?d ?core ?origin ?s1 ?s2)
+        (move-heavy-transporter ?t ?origin ?destination)
+        (move-loading-drone ?d ?origin ?destination)
+        (ensure-unsealed ?t ?destination)
+        (ensure-cooling-on ?t)
+        (ensure-drone-charged ?d)
+        (drone-deposit-core-sample ?t ?d ?core ?origin ?destination ?s1 ?s2)
+    )
+)
+
+(:task deliver-artifact
+    :parameters (?a - artifact ?origin - hall ?destination - hall))
+
+(:method deliver-alpha-artifact-with-standard-robot
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?r - standard-robot)
+    :task (deliver-artifact ?a ?origin ?destination)
+    :precondition (and 
+        (artifactorigin ?a ?origin)
+        (isalpha ?origin)
+        (iscryochamber ?destination)
+        (not (isheavy ?a))
+    )
+    :ordered-subtasks (and (move-alpha-artifact-standard ?a ?origin ?destination ?r))
+)
+
+(:method deliver-beta-artifact-with-standard-robot
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?r - standard-robot ?p - pod)
+    :task (deliver-artifact ?a ?origin ?destination)
+    :precondition (and 
+        (artifactorigin ?a ?origin)
+        (isbeta ?origin)
+        (iscryochamber ?destination)
+        (not (isheavy ?a))
+        (podstored ?p)
+        (podempty ?p)
+    )
+    :ordered-subtasks (and (move-beta-artifact-standard ?a ?origin ?destination ?r ?p))
+)
+
+(:method deliver-alpha-artifact-with-heavy-transporter
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?s - slot)
+    :task (deliver-artifact ?a ?origin ?destination)
+    :precondition (and 
+        (artifactorigin ?a ?origin)
+        (isalpha ?origin)
+        (iscryochamber ?destination)
+        (not (isheavy ?a))
+        (slotof ?s ?t)
+        (slotempty ?s)
+    )
+    :ordered-subtasks (and (move-alpha-artifact-heavy ?a ?origin ?destination ?t ?d ?s))
+)
+
+(:method deliver-beta-artifact-with-heavy-transporter
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?p - pod ?s - slot)
+    :task (deliver-artifact ?a ?origin ?destination)
+    :precondition (and 
+        (artifactorigin ?a ?origin)
+        (isbeta ?origin)
+        (iscryochamber ?destination)
+        (not (isheavy ?a))
+        (podstored ?p)
+        (podempty ?p)
+        (slotof ?s ?t)
+        (slotempty ?s)
+    )
+    :ordered-subtasks (and (move-beta-artifact-heavy ?a ?origin ?destination ?t ?d ?p ?s))
+)
+
+(:method deliver-heavy-core-with-heavy-transporter
+    :parameters (?a - artifact ?origin - hall ?destination - hall ?t - heavy-transporter ?d - loading-drone ?s1 - slot ?s2 - slot)
+    :task (deliver-artifact ?a ?origin ?destination)
+    :precondition (and 
+        (artifactorigin ?a ?origin)
+        (iscryochamber ?origin)
+        (isstasislab ?destination)
+        (isheavy ?a)
+        (slotpair ?t ?s1 ?s2)
+        (slotof ?s1 ?t)
+        (slotof ?s2 ?t)
+    )
+    :ordered-subtasks (and (deliver-martian-core ?a ?origin ?destination ?t ?d ?s1 ?s2))
+)
+
+(:task deliver-all-artifacts
+    :parameters (?a1 - artifact ?a2 - artifact ?a3 - artifact ?b1 - artifact ?b2 - artifact ?c1 - artifact ?c2 - artifact ?alpha - hall ?beta - hall ?cryo - hall ?stasis - hall))
+
+(:method deliver-all-artifacts-in-order
+    :parameters (?a1 - artifact ?a2 - artifact ?a3 - artifact ?b1 - artifact ?b2 - artifact ?c1 - artifact ?c2 - artifact ?alpha - hall ?beta - hall ?cryo - hall ?stasis - hall ?r - standard-robot)
+    :task (deliver-all-artifacts ?a1 ?a2 ?a3 ?b1 ?b2 ?c1 ?c2 ?alpha ?beta ?cryo ?stasis)
+    :precondition (and 
+        (artifactorigin ?a1 ?alpha)
+        (artifactorigin ?a2 ?alpha)
+        (artifactorigin ?a3 ?alpha)
+        (artifactorigin ?b1 ?beta)
+        (artifactorigin ?b2 ?beta)
+        (artifactorigin ?c1 ?cryo)
+        (artifactorigin ?c2 ?cryo)
+        (isalpha ?alpha)
+        (isbeta ?beta)
+        (iscryochamber ?cryo)
+        (isstasislab ?stasis)
+        (at ?r ?cryo)
+    )
+    :ordered-subtasks (and
+        (deliver-artifact ?a1 ?alpha ?cryo)
+        (deliver-artifact ?a2 ?alpha ?cryo)
+        (deliver-artifact ?a3 ?alpha ?cryo)
+        (deliver-artifact ?b1 ?beta ?cryo)
+        (deliver-artifact ?b2 ?beta ?cryo)
+        (move-standard-robot ?r ?cryo ?alpha)
+        (deliver-artifact ?c1 ?cryo ?stasis)
+        (deliver-artifact ?c2 ?cryo ?stasis)
+    )
+)
+
+)
