@@ -108,6 +108,7 @@ robot artifact hall pod
     :effect (and 
         (podstored ?p)
         (not (haspod ?r ?p))
+        (empty ?r)
     )
 )
 

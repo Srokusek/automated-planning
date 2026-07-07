@@ -131,6 +131,7 @@ standard-robot heavy-transporter loading-drone - robot ;additional subtypes of a
     :effect (and 
         (podstored ?p)
         (not (haspod ?r ?p))
+        (empty ?r)
     )
 )
 
