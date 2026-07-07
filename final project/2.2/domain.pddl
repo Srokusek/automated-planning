@@ -21,9 +21,7 @@ loading-drone - robot ;additional subtypes of a robot
 (artifactorigin ?a - artifact ?h - hall)
 (artifactinpod ?a - artifact ?p - pod)
 (podstored ?p - pod)
-(haspod ?r - robot ?p - pod)
 (podempty ?p - pod)
-(carrying ?r - robot ?a - artifact)
 
 (indestination ?a - artifact)
 
@@ -40,15 +38,15 @@ loading-drone - robot ;additional subtypes of a robot
 (coolingoff ?r - robot)
 (sealed ?r - robot)
 (unsealed ?r - robot)
-(empty ?r - robot)
 
 ;two-state battery for loading drones
 (batteryfull ?d - loading-drone)
 (batteryempty ?d - loading-drone)
+(dronepair ?d1 - loading-drone ?d2 - loading-drone)
 
-;heavy transporter slots
-(slotof ?s - slot ?t - heavy-transporter)
-(slotpair ?t - heavy-transporter ?s1 - slot ?s2 - slot)
+;land robot slots
+(slotof ?s - slot ?r - land-robot)
+(slotpair ?r - land-robot ?s1 - slot ?s2 - slot)
 (slotempty ?s - slot)
 (artifactinslot ?a - artifact ?s - slot)
 (podinslot ?p - pod ?s - slot)
@@ -101,37 +99,36 @@ loading-drone - robot ;additional subtypes of a robot
     )
 )
 
-;actions for standard robot
-
 ;take a pod from the storing location
 (:action take-pod
-    :parameters (?r - standard-robot ?p - pod)
+    :parameters (?r - land-robot ?p - pod ?s - slot)
     :precondition (and 
         (podstored ?p)
-        (empty ?r)
         (intunnel ?r)
+        (slotof ?s ?r)
+        (slotempty ?s)
     )
     :effect (and 
         (not (podstored ?p))
-        (not (empty ?r))
-        (haspod ?r ?p)
+        (not (slotempty ?s))
+        (podinslot ?p ?s)
     )
 )
 
 ;return a pod to the storing location
 (:action return-pod
-    :parameters (?r - standard-robot ?p - pod)
+    :parameters (?r - land-robot ?p - pod ?s - slot)
     :precondition (and 
-        (haspod ?r ?p)
         (sealed ?r)
-        (empty ?r)
         (podempty ?p)
         (intunnel ?r)
+        (slotof ?s ?r)
+        (podinslot ?p ?s)
     )
     :effect (and 
         (podstored ?p)
-        (not (haspod ?r ?p))
-        (empty ?r)
+        (not (podinslot ?p ?s))
+        (slotempty ?s)
     )
 )
 
@@ -189,159 +186,43 @@ loading-drone - robot ;additional subtypes of a robot
     )
 )
 
-;take an artifact from beta
-;requires the vibration pod, also requires the robot to be unsealed
-(:action take-artifact-beta
-    :parameters (?r - standard-robot ?a - artifact ?h - hall ?p - pod)
+;actions for land robot + drone
+(:action load-artifact-alpha
+    :parameters (?r - land-robot ?d - loading-drone ?a - artifact ?h - hall ?s - slot)
     :precondition (and 
         (at ?r ?h)
+        (at ?d ?h)
         (artifactorigin ?a ?h)
-        (isbeta ?h)
-        (haspod ?r ?p)
-        (podempty ?p)
-        (unsealed ?r)
-        (coolingoff ?r)
-    )
-    :effect (and 
-        (not (podempty ?p))
-        (not (empty ?r))
-        (carrying ?r ?a)
-        (artifactinpod ?a ?p)
-    )
-)
-
-;take and artifact from the alpha hall
-;cooling has to beturned on to pick up the artifact
-(:action take-artifact-alpha
-    :parameters (?r - standard-robot ?a - artifact ?h - hall)
-    :precondition (and 
-        (at ?r ?h)
         (isalpha ?h)
-        (artifactorigin ?a ?h)
-        (empty ?r)
         (unsealed ?r)
         (coolingon ?r)
-
-    )
-    :effect (and 
-        (carrying ?r ?a)
-        (not (empty ?r))
-    )
-)
-
-;deposit an alpha artifact
-(:action deposit-artifact-alpha
-    :parameters (?r - standard-robot ?a - artifact ?h1 - hall ?h2 - hall)
-    :precondition (and 
-        (isalpha ?h1)
-        (artifactorigin ?a ?h1)
-        (at ?r ?h2)
-        (carrying ?r ?a)
-        (iscryochamber ?h2)
-        (unsealed ?r)
-    )
-    :effect (and 
-        (not (carrying ?r ?a))
-        (indestination ?a)
-        (empty ?r)
-    )
-)
-
-;deposit a beta artifact
-(:action deposit-artifact-beta
-    :parameters (?r - standard-robot ?a - artifact ?h1 - hall ?h2 - hall ?p - pod)
-    :precondition (and 
-        (isbeta ?h1)
-        (artifactorigin ?a ?h1)
-        (at ?r ?h2)
-        (carrying ?r ?a)
-        (iscryochamber ?h2)
-        (unsealed ?r)
-        (haspod ?r ?p)
-    )
-    :effect (and 
-        (not (carrying ?r ?a))
-        (indestination ?a)
-        (empty ?r)
-        (not (artifactinpod ?a ?p))
-        (podempty ?p)
-    )
-)
-
-;actions for heavy transporter + drone
-(:action heavy-take-pod
-    :parameters (?t - heavy-transporter ?p - pod ?s - slot)
-    :precondition (and 
-        (podstored ?p)
-        (intunnel ?t)
-        (slotof ?s ?t)
-        (slotempty ?s)
-    )
-    :effect (and 
-        (not (podstored ?p))
-        (not (slotempty ?s))
-        (podinslot ?p ?s)
-        (haspod ?t ?p)
-    )
-)
-
-(:action heavy-return-pod
-    :parameters (?t - heavy-transporter ?p - pod ?s - slot)
-    :precondition (and 
-        (haspod ?t ?p)
-        (sealed ?t)
-        (podempty ?p)
-        (intunnel ?t)
-        (slotof ?s ?t)
-        (podinslot ?p ?s)
-    )
-    :effect (and 
-        (podstored ?p)
-        (not (haspod ?t ?p))
-        (not (podinslot ?p ?s))
-        (slotempty ?s)
-    )
-)
-
-(:action drone-load-artifact-alpha
-    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h - hall ?s - slot)
-    :precondition (and 
-        (at ?t ?h)
-        (at ?d ?h)
-        (artifactorigin ?a ?h)
-        (isalpha ?h)
-        (unsealed ?t)
-        (coolingon ?t)
         (not (isheavy ?a))
         (batteryfull ?d)
-        (slotof ?s ?t)
+        (slotof ?s ?r)
         (slotempty ?s)
     )
     :effect (and 
         (not (slotempty ?s))
         (artifactinslot ?a ?s)
-        (carrying ?t ?a)
         (not (batteryfull ?d))
         (batteryempty ?d)
     )
 )
 
-(:action drone-deposit-artifact-alpha
-    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?s - slot)
+(:action deposit-artifact-alpha
+    :parameters (?r - land-robot ?d - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?s - slot)
     :precondition (and 
         (isalpha ?h1)
         (artifactorigin ?a ?h1)
-        (at ?t ?h2)
+        (at ?r ?h2)
         (at ?d ?h2)
-        (carrying ?t ?a)
         (artifactinslot ?a ?s)
-        (slotof ?s ?t)
+        (slotof ?s ?r)
         (iscryochamber ?h2)
-        (unsealed ?t)
+        (unsealed ?r)
         (batteryfull ?d)
     )
     :effect (and 
-        (not (carrying ?t ?a))
         (indestination ?a)
         (not (artifactinslot ?a ?s))
         (slotempty ?s)
@@ -350,25 +231,23 @@ loading-drone - robot ;additional subtypes of a robot
     )
 )
 
-(:action drone-load-artifact-beta
-    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h - hall ?p - pod ?s - slot)
+(:action load-artifact-beta
+    :parameters (?r - land-robot ?d - loading-drone ?a - artifact ?h - hall ?p - pod ?s - slot)
     :precondition (and 
-        (at ?t ?h)
+        (at ?r ?h)
         (at ?d ?h)
         (artifactorigin ?a ?h)
         (isbeta ?h)
-        (haspod ?t ?p)
         (podempty ?p)
         (podinslot ?p ?s)
-        (slotof ?s ?t)
-        (unsealed ?t)
-        (coolingoff ?t)
+        (slotof ?s ?r)
+        (unsealed ?r)
+        (coolingoff ?r)
         (not (isheavy ?a))
         (batteryfull ?d)
     )
     :effect (and 
         (not (podempty ?p))
-        (carrying ?t ?a)
         (artifactinpod ?a ?p)
         (artifactinslot ?a ?s)
         (not (batteryfull ?d))
@@ -376,25 +255,22 @@ loading-drone - robot ;additional subtypes of a robot
     )
 )
 
-(:action drone-deposit-artifact-beta
-    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?p - pod ?s - slot)
+(:action deposit-artifact-beta
+    :parameters (?r - land-robot ?d - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?p - pod ?s - slot)
     :precondition (and 
         (isbeta ?h1)
         (artifactorigin ?a ?h1)
-        (at ?t ?h2)
+        (at ?r ?h2)
         (at ?d ?h2)
-        (carrying ?t ?a)
         (artifactinpod ?a ?p)
         (artifactinslot ?a ?s)
         (podinslot ?p ?s)
-        (slotof ?s ?t)
+        (slotof ?s ?r)
         (iscryochamber ?h2)
-        (unsealed ?t)
-        (haspod ?t ?p)
+        (unsealed ?r)
         (batteryfull ?d)
     )
     :effect (and 
-        (not (carrying ?t ?a))
         (indestination ?a)
         (not (artifactinpod ?a ?p))
         (not (artifactinslot ?a ?s))
@@ -404,20 +280,23 @@ loading-drone - robot ;additional subtypes of a robot
     )
 )
 
-(:action drone-load-core-sample
-    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
+(:action load-core-sample
+    :parameters (?r - land-robot ?d1 - loading-drone ?d2 - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
     :precondition (and 
-        (at ?t ?h)
-        (at ?d ?h)
+        (at ?r ?h)
+        (at ?d1 ?h)
+        (at ?d2 ?h)
         (artifactorigin ?a ?h)
         (iscryochamber ?h)
-        (unsealed ?t)
-        (coolingon ?t)
+        (unsealed ?r)
+        (coolingon ?r)
         (isheavy ?a)
-        (batteryfull ?d)
-        (slotpair ?t ?s1 ?s2)
-        (slotof ?s1 ?t)
-        (slotof ?s2 ?t)
+        (batteryfull ?d1)
+        (batteryfull ?d2)
+        (dronepair ?d1 ?d2)
+        (slotpair ?r ?s1 ?s2)
+        (slotof ?s1 ?r)
+        (slotof ?s2 ?r)
         (slotempty ?s1)
         (slotempty ?s2)
     )
@@ -426,40 +305,44 @@ loading-drone - robot ;additional subtypes of a robot
         (not (slotempty ?s2))
         (artifactinslot ?a ?s1)
         (artifactinslot ?a ?s2)
-        (carrying ?t ?a)
-        (not (batteryfull ?d))
-        (batteryempty ?d)
+        (not (batteryfull ?d1))
+        (not (batteryfull ?d2))
+        (batteryempty ?d1)
+        (batteryempty ?d2)
     )
 )
 
-(:action drone-deposit-core-sample
-    :parameters (?t - heavy-transporter ?d - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?s1 - slot ?s2 - slot)
+(:action deposit-core-sample
+    :parameters (?r - land-robot ?d1 - loading-drone ?d2 - loading-drone ?a - artifact ?h1 - hall ?h2 - hall ?s1 - slot ?s2 - slot)
     :precondition (and 
-        (at ?t ?h2)
-        (at ?d ?h2)
+        (at ?r ?h2)
+        (at ?d1 ?h2)
+        (at ?d2 ?h2)
         (artifactorigin ?a ?h1)
         (iscryochamber ?h1)
         (isstasislab ?h2)
-        (unsealed ?t)
-        (coolingon ?t)
+        (unsealed ?r)
+        (coolingon ?r)
         (isheavy ?a)
-        (batteryfull ?d)
-        (slotpair ?t ?s1 ?s2)
-        (slotof ?s1 ?t)
-        (slotof ?s2 ?t)
+        (batteryfull ?d1)
+        (batteryfull ?d2)
+        (dronepair ?d1 ?d2)
+        (slotpair ?r ?s1 ?s2)
+        (slotof ?s1 ?r)
+        (slotof ?s2 ?r)
         (artifactinslot ?a ?s1)
         (artifactinslot ?a ?s2)
-        (carrying ?t ?a)
     )
     :effect (and 
-        (not (carrying ?t ?a))
         (not (artifactinslot ?a ?s1))
         (not (artifactinslot ?a ?s2))
         (slotempty ?s1)
         (slotempty ?s2)
         (indestination ?a)
-        (not (batteryfull ?d))
-        (batteryempty ?d)
+        (not (batteryfull ?d1))
+        (not (batteryfull ?d2))
+        (batteryempty ?d1)
+        (batteryempty ?d2)
     )
 )
 

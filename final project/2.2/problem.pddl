@@ -3,10 +3,10 @@
     a1 a2 a3 b1 b2 c1 c2 - artifact
     h_alpha h_beta h_cryo h_stasis - hall
     p1 p2 - pod
-    s1 s2 - slot
+    sr s1 s2 - slot
     r - standard-robot
     t - heavy-transporter
-    d - loading-drone
+    d1 d2 - loading-drone
 )
 
 (:init
@@ -40,7 +40,8 @@
 (occupied h_cryo)
 (unsealed r)
 (coolingoff r)
-(empty r)
+(slotof sr r)
+(slotempty sr)
 
 ;heavy transporter inits
 (at t h_stasis)
@@ -55,10 +56,16 @@
 (slotempty s2)
 
 ;loading drone inits
-(at d h_stasis)
-(unsealed d)
-(coolingoff d)
-(batteryfull d)
+(at d1 h_stasis)
+(at d2 h_stasis)
+(unsealed d1)
+(unsealed d2)
+(coolingoff d1)
+(coolingoff d2)
+(batteryfull d1)
+(batteryfull d2)
+(dronepair d1 d2)
+(dronepair d2 d1)
 )
 
 (:goal (and
