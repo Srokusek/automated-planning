@@ -8,7 +8,6 @@
     ;c2 - cryo-artifact
     h_alpha h_beta h_cryo h_stasis - hall
     p1 p2 - pod
-    sr s1 s2 - slot
     r - standard-robot
     t - heavy-transporter
     d1 d2 - loading-drone
@@ -43,19 +42,13 @@
 (at r h_cryo)
 (unsealed r)
 (coolingoff r)
-(slotof sr r)
-(slotempty sr)
+(empty r)
 
 ;heavy transporter inits
 (at t h_stasis)
 (unsealed t)
 (coolingoff t)
-(slotof s1 t)
-(slotof s2 t)
-(slotpair t s1 s2)
-(slotpair t s2 s1)
-(slotempty s1)
-(slotempty s2)
+(empty t)
 
 ;loading drone inits
 (at d1 h_stasis)
@@ -76,5 +69,5 @@
     ;(indestination c2)
 ))
 
-;(:metric minimize (total-time))
+(:metric minimize (total-time))
 )
