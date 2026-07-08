@@ -76,8 +76,6 @@
 (at d2 h_stasis)
 (unsealed d1)
 (unsealed d2)
-(coolingoff d1)
-(coolingoff d2)
 (batteryfull d1)
 (batteryfull d2)
 (dronepair d1 d2)

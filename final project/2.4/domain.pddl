@@ -84,7 +84,7 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:durative-action cool
-    :parameters (?r - robot)
+    :parameters (?r - land-robot)
     :duration (and (= ?duration 2))
     :condition (and 
         (at start (coolingoff ?r))
@@ -96,7 +96,7 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:action cool-off
-    :parameters (?r - robot)
+    :parameters (?r - land-robot)
     :precondition (and 
         (coolingon ?r)
     )
