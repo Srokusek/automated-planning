@@ -1,7 +1,11 @@
 (define (problem problem-1) (:domain artifacts-2-4)
 (:objects 
-    ;a1 a2 a3 b1 b2 c1 c2 - artifact
-    a1 b1 c1 - artifact
+    a1 - alpha-artifact
+    ;a2 a3 - alpha-artifact
+    b1 - beta-artifact
+    ;b2 - beta-artifact
+    c1 - cryo-artifact
+    ;c2 - cryo-artifact
     h_alpha h_beta h_cryo h_stasis - hall
     p1 p2 - pod
     sr s1 s2 - slot
@@ -11,14 +15,7 @@
 )
 
 (:init
-;artifact category and availability inits
-(isalphaartifact a1)
-;(isalphaartifact a2)
-;(isalphaartifact a3)
-(isbetaartifact b1)
-;(isbetaartifact b2)
-(iscryoartifact c1)
-;(iscryoartifact c2)
+;artifact availability inits
 (available a1)
 ;(available a2)
 ;(available a3)
@@ -26,15 +23,6 @@
 ;(available b2)
 (available c1)
 ;(available c2)
-
-;heavy artifacts
-(isheavy c1)
-;(isheavy c2)
-(islight a1)
-;(islight a2)
-;(islight a3)
-(islight b1)
-;(islight b2)
 
 ;hall types
 (iscryochamber h_cryo)

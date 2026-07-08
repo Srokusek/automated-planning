@@ -6,6 +6,7 @@
 
 (:types
 robot artifact hall pod slot
+alpha-artifact beta-artifact cryo-artifact - artifact
 land-robot - robot
 standard-robot heavy-transporter - land-robot
 loading-drone - robot ;additional subtypes of a robot
@@ -24,13 +25,6 @@ loading-drone - robot ;additional subtypes of a robot
 (available ?a - artifact)
 
 (indestination ?a - artifact)
-
-;new heavy artifact type
-(isheavy ?a - artifact)
-(islight ?a - artifact)
-(isalphaartifact ?a - artifact)
-(isbetaartifact ?a - artifact)
-(iscryoartifact ?a - artifact)
 
 (iscryochamber ?h - hall)
 (isstasislab ?h - hall)
@@ -233,7 +227,7 @@ loading-drone - robot ;additional subtypes of a robot
 
 ;actions for land robot + drone
 (:durative-action load-artifact-alpha
-    :parameters (?r - land-robot ?d - loading-drone ?a - artifact ?h - hall ?s - slot)
+    :parameters (?r - land-robot ?d - loading-drone ?a - alpha-artifact ?h - hall ?s - slot)
     :duration (and (= ?duration 1))
     :condition (and 
         (at start (at ?r ?h))
@@ -241,11 +235,9 @@ loading-drone - robot ;additional subtypes of a robot
         (at start (at ?d ?h))
         (over all (at ?d ?h))
         (at start (isalpha ?h))
-        (at start (isalphaartifact ?a))
         (at start (available ?a))
         (over all (unsealed ?r))
         (over all (coolingon ?r))
-        (at start (islight ?a))
         (at start (batteryfull ?d))
         (at start (slotof ?s ?r))
         (at start (slotempty ?s))
@@ -260,10 +252,9 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:durative-action deposit-artifact-alpha
-    :parameters (?r - land-robot ?d - loading-drone ?a - artifact ?h - hall ?s - slot)
+    :parameters (?r - land-robot ?d - loading-drone ?a - alpha-artifact ?h - hall ?s - slot)
     :duration (and (= ?duration 1))
     :condition (and 
-        (at start (isalphaartifact ?a))
         (at start (at ?r ?h))
         (over all (at ?r ?h))
         (at start (at ?d ?h))
@@ -284,7 +275,7 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:durative-action load-artifact-beta
-    :parameters (?r - land-robot ?d - loading-drone ?a - artifact ?h - hall ?p - pod ?s - slot)
+    :parameters (?r - land-robot ?d - loading-drone ?a - beta-artifact ?h - hall ?p - pod ?s - slot)
     :duration (and (= ?duration 1))
     :condition (and 
         (at start (at ?r ?h))
@@ -292,14 +283,12 @@ loading-drone - robot ;additional subtypes of a robot
         (at start (at ?d ?h))
         (over all (at ?d ?h))
         (at start (isbeta ?h))
-        (at start (isbetaartifact ?a))
         (at start (available ?a))
         (at start (podempty ?p))
         (at start (podinslot ?p ?s))
         (at start (slotof ?s ?r))
         (over all (unsealed ?r))
         (over all (coolingoff ?r))
-        (at start (islight ?a))
         (at start (batteryfull ?d))
     )
     :effect (and 
@@ -313,10 +302,9 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:durative-action deposit-artifact-beta
-    :parameters (?r - land-robot ?d - loading-drone ?a - artifact ?h - hall ?p - pod ?s - slot)
+    :parameters (?r - land-robot ?d - loading-drone ?a - beta-artifact ?h - hall ?p - pod ?s - slot)
     :duration (and (= ?duration 1))
     :condition (and 
-        (at start (isbetaartifact ?a))
         (at start (at ?r ?h))
         (over all (at ?r ?h))
         (at start (at ?d ?h))
@@ -340,7 +328,7 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:durative-action load-core-sample
-    :parameters (?r - heavy-transporter ?d1 - loading-drone ?d2 - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
+    :parameters (?r - heavy-transporter ?d1 - loading-drone ?d2 - loading-drone ?a - cryo-artifact ?h - hall ?s1 - slot ?s2 - slot)
     :duration (and (= ?duration 2))
     :condition (and 
         (at start (at ?r ?h))
@@ -350,11 +338,9 @@ loading-drone - robot ;additional subtypes of a robot
         (at start (at ?d2 ?h))
         (over all (at ?d2 ?h))
         (at start (iscryochamber ?h))
-        (at start (iscryoartifact ?a))
         (at start (available ?a))
         (over all (unsealed ?r))
         (over all (coolingon ?r))
-        (at start (isheavy ?a))
         (at start (batteryfull ?d1))
         (at start (batteryfull ?d2))
         (at start (dronepair ?d1 ?d2))
@@ -378,7 +364,7 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:durative-action deposit-core-sample
-    :parameters (?r - heavy-transporter ?d1 - loading-drone ?d2 - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
+    :parameters (?r - heavy-transporter ?d1 - loading-drone ?d2 - loading-drone ?a - cryo-artifact ?h - hall ?s1 - slot ?s2 - slot)
     :duration (and (= ?duration 2))
     :condition (and 
         (at start (at ?r ?h))
@@ -387,11 +373,9 @@ loading-drone - robot ;additional subtypes of a robot
         (over all (at ?d1 ?h))
         (at start (at ?d2 ?h))
         (over all (at ?d2 ?h))
-        (at start (iscryoartifact ?a))
         (at start (isstasislab ?h))
         (over all (unsealed ?r))
         (over all (coolingon ?r))
-        (at start (isheavy ?a))
         (at start (batteryfull ?d1))
         (at start (batteryfull ?d2))
         (at start (dronepair ?d1 ?d2))
