@@ -11,14 +11,21 @@
 )
 
 (:init
-;artifact origins inits
-(artifactorigin a1 h_alpha)
-;(artifactorigin a2 h_alpha)
-;(artifactorigin a3 h_alpha)
-(artifactorigin b1 h_beta)
-;(artifactorigin b2 h_beta)
-(artifactorigin c1 h_cryo)
-;(artifactorigin c2 h_cryo)
+;artifact category and availability inits
+(isalphaartifact a1)
+;(isalphaartifact a2)
+;(isalphaartifact a3)
+(isbetaartifact b1)
+;(isbetaartifact b2)
+(iscryoartifact c1)
+;(iscryoartifact c2)
+(available a1)
+;(available a2)
+;(available a3)
+(available b1)
+;(available b2)
+(available c1)
+;(available c2)
 
 ;heavy artifacts
 (isheavy c1)
