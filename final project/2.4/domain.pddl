@@ -40,10 +40,10 @@ loading-drone - robot ;additional subtypes of a robot
 (isbeta ?h - hall)
 
 (intunnel ?r - robot)
-(coolingon ?r - robot)
-(coolingoff ?r - robot)
-(sealed ?r - robot)
-(unsealed ?r - robot)
+(coolingon ?r - land-robot)
+(coolingoff ?r - land-robot)
+(sealed ?r - land-robot)
+(unsealed ?r - land-robot)
 
 ;two-state battery for loading drones
 (batteryfull ?d - loading-drone)
@@ -60,7 +60,7 @@ loading-drone - robot ;additional subtypes of a robot
 
 ;robot enters the sealed mode
 (:action seal
-    :parameters (?r - robot)
+    :parameters (?r - land-robot)
     :precondition (and 
         (unsealed ?r)
     )
@@ -72,7 +72,7 @@ loading-drone - robot ;additional subtypes of a robot
 
 ;robot exits the sealed mode
 (:action unseal
-    :parameters (?r - robot ?h - hall)
+    :parameters (?r - land-robot ?h - hall)
     :precondition (and 
         (sealed ?r)
         (at ?r ?h)
@@ -182,7 +182,6 @@ loading-drone - robot ;additional subtypes of a robot
     :parameters (?d - loading-drone ?h - hall)
     :duration (and (= ?duration 1))
     :condition (and 
-        (at start (sealed ?d))
         (at start (at ?d ?h))
         (over all (at ?d ?h))
     )

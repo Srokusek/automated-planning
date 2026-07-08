@@ -74,8 +74,6 @@
 ;loading drone inits
 (at d1 h_stasis)
 (at d2 h_stasis)
-(unsealed d1)
-(unsealed d2)
 (batteryfull d1)
 (batteryfull d2)
 (dronepair d1 d2)
