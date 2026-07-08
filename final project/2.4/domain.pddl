@@ -15,8 +15,6 @@ loading-drone - robot ;additional subtypes of a robot
 (at ?r - robot ?h - hall)
 
 ;keeping track of hall occupancy
-(occupied ?h - hall)
-(tunneloccupied)
 (hallfree ?h - hall)
 (tunnelfree)
 
@@ -151,9 +149,7 @@ loading-drone - robot ;additional subtypes of a robot
     )
     :effect (and 
         (at start (not (tunnelfree)))
-        (at start (tunneloccupied))
         (at end (not (at ?r ?h)))
-        (at end (not (occupied ?h)))
         (at end (hallfree ?h))
         (at end (intunnel ?r))
     )
@@ -170,9 +166,7 @@ loading-drone - robot ;additional subtypes of a robot
     )
     :effect (and 
         (at start (not (tunnelfree)))
-        (at start (tunneloccupied))
         (at end (not (at ?r ?h)))
-        (at end (not (occupied ?h)))
         (at end (hallfree ?h))
         (at end (intunnel ?r))
     )
@@ -198,15 +192,12 @@ loading-drone - robot ;additional subtypes of a robot
     :condition (and 
         (at start (intunnel ?r))
         (over all (intunnel ?r))
-        (at start (tunneloccupied))
         (at start (hallfree ?h))
     )
     :effect (and 
         (at start (not (hallfree ?h)))
-        (at start (occupied ?h))
         (at end (at ?r ?h))
         (at end (not (intunnel ?r)))
-        (at end (not (tunneloccupied)))
         (at end (tunnelfree))
     )
 )
@@ -217,15 +208,12 @@ loading-drone - robot ;additional subtypes of a robot
     :condition (and 
         (at start (intunnel ?r))
         (over all (intunnel ?r))
-        (at start (tunneloccupied))
         (at start (hallfree ?h))
     )
     :effect (and 
         (at start (not (hallfree ?h)))
-        (at start (occupied ?h))
         (at end (at ?r ?h))
         (at end (not (intunnel ?r)))
-        (at end (not (tunneloccupied)))
         (at end (tunnelfree))
     )
 )
@@ -352,7 +340,7 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:durative-action load-core-sample
-    :parameters (?r - land-robot ?d1 - loading-drone ?d2 - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
+    :parameters (?r - heavy-transporter ?d1 - loading-drone ?d2 - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
     :duration (and (= ?duration 2))
     :condition (and 
         (at start (at ?r ?h))
@@ -390,7 +378,7 @@ loading-drone - robot ;additional subtypes of a robot
 )
 
 (:durative-action deposit-core-sample
-    :parameters (?r - land-robot ?d1 - loading-drone ?d2 - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
+    :parameters (?r - heavy-transporter ?d1 - loading-drone ?d2 - loading-drone ?a - artifact ?h - hall ?s1 - slot ?s2 - slot)
     :duration (and (= ?duration 2))
     :condition (and 
         (at start (at ?r ?h))

@@ -53,7 +53,6 @@
 
 ;robot inits
 (at r h_cryo)
-(occupied h_cryo)
 (unsealed r)
 (coolingoff r)
 (slotof sr r)
@@ -61,7 +60,6 @@
 
 ;heavy transporter inits
 (at t h_stasis)
-(occupied h_stasis)
 (unsealed t)
 (coolingoff t)
 (slotof s1 t)
