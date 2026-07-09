@@ -1,4 +1,4 @@
-(define (problem problem-1) (:domain artifacts-2-4)
+(define (problem problem-1) (:domain artifacts-2-4-tunnel-hall)
 (:objects 
     ;a1 - alpha-artifact
     ;a2 a3 - alpha-artifact
@@ -6,7 +6,7 @@
     ;b2 - beta-artifact
     c1 - cryo-artifact
     ;c2 - cryo-artifact
-    h_alpha h_beta h_cryo h_stasis - hall
+    h_alpha h_beta h_cryo h_stasis h_tunnel - hall
     p1 p2 - pod
     r - standard-robot
     t - heavy-transporter
@@ -28,9 +28,18 @@
 (isalpha h_alpha)
 (isbeta h_beta)
 (isstasislab h_stasis)
+(istunnel h_tunnel)
+(adjacent h_tunnel h_alpha)
+(adjacent h_alpha h_tunnel)
+(adjacent h_tunnel h_beta)
+(adjacent h_beta h_tunnel)
+(adjacent h_tunnel h_cryo)
+(adjacent h_cryo h_tunnel)
+(adjacent h_tunnel h_stasis)
+(adjacent h_stasis h_tunnel)
 (hallfree h_alpha)
 (hallfree h_beta)
-(tunnelfree)
+(hallfree h_tunnel)
 
 ;pod inits
 (podstored p1)
