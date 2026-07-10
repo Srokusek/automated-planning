@@ -1,0 +1,11 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/deposit_artifact_beta_action.dir/deposit_artifact_beta_action.cpp.o"
+  "CMakeFiles/deposit_artifact_beta_action.dir/deposit_artifact_beta_action.cpp.o.d"
+  "deposit_artifact_beta_action"
+  "deposit_artifact_beta_action.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/deposit_artifact_beta_action.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

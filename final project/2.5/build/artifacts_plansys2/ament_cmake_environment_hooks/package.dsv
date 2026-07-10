@@ -1,0 +1,4 @@
+source;share/artifacts_plansys2/local_setup.bash
+source;share/artifacts_plansys2/local_setup.dsv
+source;share/artifacts_plansys2/local_setup.sh
+source;share/artifacts_plansys2/local_setup.zsh

@@ -1,0 +1,1 @@
+/home/simon/repos/automated-planning/final project/2.5/build/artifacts_plansys2/ament_cmake_core/artifacts_plansys2Config.cmake
