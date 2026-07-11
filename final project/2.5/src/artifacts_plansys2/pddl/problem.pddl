@@ -50,6 +50,7 @@
 
 ;robot inits
 (landrobotat r h_cryo)
+(robot-idle r)
 (unsealed r)
 (coolingoff r)
 (slotof sr r)
@@ -57,6 +58,7 @@
 
 ;heavy transporter inits
 (landrobotat t h_stasis)
+(robot-idle t)
 (unsealed t)
 (coolingoff t)
 (slotof s1 t)
@@ -69,6 +71,8 @@
 ;loading drone inits
 (droneat d1 h_stasis)
 (droneat d2 h_stasis)
+(drone-idle d1)
+(drone-idle d2)
 (batteryfull d1)
 (batteryfull d2)
 (dronepair d1 d2)
@@ -78,10 +82,10 @@
 (:goal (and
     (indestination a1)
     (indestination a2)
-    (indestination a3)
+    ;(indestination a3)
     (indestination b1)
-    (indestination b2)
-    (indestination c1)
+    ;(indestination b2)
+    ;(indestination c1)
     (indestination c2)
 ))
 
