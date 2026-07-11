@@ -14,7 +14,7 @@ public:
   explicit FakeAction(
     const char * node_name,
     std::chrono::milliseconds duration)
-  : plansys2::ActionExecutorClient(node_name, std::chrono::milliseconds(100)),
+  : plansys2::ActionExecutorClient(node_name, std::chrono::milliseconds(10)),
     duration_(duration)
   {
   }
