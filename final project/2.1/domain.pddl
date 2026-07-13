@@ -177,40 +177,6 @@ robot artifact hall pod
     )
 )
 
-(:action take-core-sample
-    :parameters (?r - robot ?a - artifact ?h - hall)
-    :precondition (and 
-        (at ?r ?h)
-        (iscryochamber ?h)
-        (artifactorigin ?a ?h)
-        (empty ?r)
-        (unsealed ?r)
-        (coolingoff ?r)
-    )
-    :effect (and 
-        (carrying ?r ?a)
-        (not (empty ?r))
-    )
-)
-
-(:action deposit-core-sample
-    :parameters (?r - robot ?a - artifact ?h1 - hall ?h2 - hall)
-    :precondition (and 
-        (carrying ?r ?a)
-        (artifactorigin ?a ?h1)
-        (iscryochamber ?h1)
-        (at ?r ?h2)
-        (isstasislab ?h2)
-        (unsealed ?r)
-    )
-    :effect (and 
-        (not (carrying ?r ?a))
-        (indestination ?a)
-        (empty ?r)
-    )
-)
-
-
 ;deposit an alpha artifact
 (:action deposit-artifact-alpha
     :parameters (?r - robot ?a - artifact ?h1 - hall ?h2 - hall)
